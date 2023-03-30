@@ -1,5 +1,3 @@
-# To use Inference Engine backend, specify location of plugins:
-# export LD_LIBRARY_PATH=/opt/intel/deeplearning_deploymenttoolkit/deployment_tools/external/mklml_lnx/lib:$LD_LIBRARY_PATH
 import cv2 as cv
 import numpy as np
 import argparse
@@ -30,7 +28,7 @@ inHeight = args.height
 net = cv.dnn.readNetFromTensorflow("graph_opt.pb")
 cap = cv.VideoCapture(args.input if args.input else 0)
 
-# Define the codec and create VideoWriter object
+
 fourcc = cv.VideoWriter_fourcc(*'XVID')
 outVid = cv.VideoWriter('salidaVIDEO.avi', fourcc, 30.0, (640, 480))
 
@@ -46,22 +44,18 @@ while cv.waitKey(1) < 0:
     
     net.setInput(cv.dnn.blobFromImage(frame, 1.0, (inWidth, inHeight), (127.5, 127.5, 127.5), swapRB=True, crop=False))
     out = net.forward()
-    out = out[:, :19, :, :]  # MobileNet output [1, 57, -1, -1], we only need the first 19 elements
-
+    out = out[:, :19, :, :]  
     assert(len(BODY_PARTS) == out.shape[1])
     
     points = []
     for i in range(len(BODY_PARTS)):
-        # Slice heatmap of corresponging body's part.
+        
         heatMap = out[0, i, :, :]
 
-        # Originally, we try to find all the local maximums. To simplify a sample
-        # we just find a global one. However only a single pose at the same time
-        # could be detected this way.
+        
         _, conf, _, point = cv.minMaxLoc(heatMap)
         x = (frameWidth * point[0]) / out.shape[3]
         y = (frameHeight * point[1]) / out.shape[2]
-        # Add a point if it's confidence is higher than threshold.
         points.append((int(x), int(y)) if conf > args.thr else None)
 
     
